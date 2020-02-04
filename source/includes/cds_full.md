@@ -56,10 +56,12 @@ Obtain a list of accounts
 |---|--|
 |Version|**1**
 
-<h3 id="get-accounts-parameters">Parameters</h3>
+<h3 id="get-accounts-parameters">Field Transformations (External API <= Internal API)</h3>
 
-| originalStartDate | startDate | Loan Accounts API | mapped- which one to provide orginal start date or current contract start date (issued)- OB to confirm1. Original Start date loan, what should we do in case if loan is restructed? Loan account doesnot here. There are two fields - Date Loan Added, CAP to check if both Loan account added and Issued are same when Loan is issued |
+| Target Field | Source Field | Source | Mapping Rule |
 |-----------------------|--------------------------------------------------------------------------------------------|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| specificAccountUType |  |  | loan |
+| originalStartDate | startDate | Loan Accounts API | mapped- which one to provide orginal start date or current contract start date (issued)- OB to confirm1. Original Start date loan, what should we do in case if loan is restructed? Loan account doesnot here. There are two fields - Date Loan Added, CAP to check if both Loan account added and Issued are same when Loan is issued |
 | originalLoanAmount | loanDetails[0].originalLoanAmount | Loan Accounts API | mapped(Changes with renewal, but this should not effect OB fields) |
 | originalLoanCurrency |  |  | - |
 | loanEndDate | endDate | Loan Accounts API | mapped |
@@ -75,25 +77,25 @@ Obtain a list of accounts
 | repaymentType | - status- loanDetails[0].interest[(where type = 'Repayment')].interestOnlyEndDate- endDate | Loan Accounts API | IF status = ''  IF (interestOnlyEndDate >= CURR_DATE OR interestOnlyEndDate == endDate) THEN    = INT_ONLY  ELSE    = PRINCIPAL_AND_INTERESTELSE (i.e. ‘P-O‘, ‘NON’, ‘CAN’ OR ‘C-O’)  = undefinedIf maturity date and interest only end date are same, then it is full time interest only loan and you need to make the balloon payment of principal.1. As suggested by Gaurav, is slightly different from original mapping. |
 | repaymentFrequency | - loanDetails[0].interest[(where type = 'Repayment')].interestOnlyEndDate- frequency- TBC | Loan Accounts API | IF (interestOnlyEndDate >= CURR_DATE) THEN  = X774662-LBL-INT-CHG-FREQELSE  = X774662-PAYMENT-FREQUENCYConvert to (W=Weekly, F=Fortnightly, M=Monthly, Q=Quarterly, H=Half yearly, Y=Yearly and S=Seasonal)1. cant find X774662-LBL-INT-CHG-FREQ2. Not set if INT_ONLY ? |
 
-#### Enumerated Values
+<h3 id="get-accounts-parameters">Field Transformations (Internal API <= System)</h3>
 
-|Parameter|Value|
-|---|---|
-|product-category|TRANS_AND_SAVINGS_ACCOUNTS|
-|product-category|TERM_DEPOSITS|
-|product-category|TRAVEL_CARDS|
-|product-category|REGULATED_TRUST_ACCOUNTS|
-|product-category|RESIDENTIAL_MORTGAGES|
-|product-category|CRED_AND_CHRG_CARDS|
-|product-category|PERS_LOANS|
-|product-category|MARGIN_LOANS|
-|product-category|LEASES|
-|product-category|TRADE_FINANCE|
-|product-category|OVERDRAFTS|
-|product-category|BUSINESS_LOANS|
-|open-status|OPEN|
-|open-status|CLOSED|
-|open-status|ALL|
+| Target Field | Source Field | Source | Source Field Name | Mapping Rule |
+|-----------------------|---------------------------------------------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|
+| originalStartDate | Date Loan issued | CAP Loan Inq | X774662_MORE_LOAN_DETAILS.X774662_DATE_LOAN_ISSUE |  |
+| originalLoanAmount | Original Loan Amount | CAP Loan Inq | X774662_MORE_LOAN_DETAILS.X774662_AMOUNT_ORIGINAL_LOAN |  |
+| originalLoanCurrency |  |  |  |  |
+| loanEndDate | Current Maturity Date | CAP Loan Inq | X774662_MORE_LOAN_DETAILS.X774662_CURRENT_MATURITY_DATE |  |
+| nextInstalmentDate | Next Payment Date | CAP Loan Inq | X774662_MORE_LOAN_DETAILS.X774662_PYMT_DUE_DATE |  |
+| minInstalmentAmount | Loan Payment Amount | CAP Loan Inq | X774662_MORE_LOAN_DETAILS.X774662_PAYMENT_AMT |  |
+| minInstalmentCurrency |  |  |  |  |
+| maxRedraw | - Redraw Eligible- Advanced to date | CAP Loan Inq | - X774662_ILP_EXTRA_DATA_1.X774662_REDRAW_ELIGIBLE- X774662_ILP_EXTRA_DATA_1.X774662_ADV_TO_DATE |  |
+| maxRedrawCurrency |  |  |  |  |
+| minRedraw |  |  |  |  |
+| minRedrawCurrency |  |  |  |  |
+| offsetAccountEnabled | Product Set Off | CAP Loan Inq | X774662_MORE_LOAN_DETAILS.X774662_SET_PSO_DDA_ACCT |  |
+| offsetAccountIds | Product Set Off | CAP Loan Inq | X774662_MORE_LOAN_DETAILS.X774662_SET_PSO_DDA_ACCT |  |
+| repaymentType | - Loan Status- Interest Only End Date- Current Maturity Date | CAP Loan Inq | - X774662_LOAN_CIS_INFO.X774662_LOAN_STATUS- X774662_MORE_LOAN_DETAILS.X774662_INT_ONLY_END_DATE- X774662_MORE_LOAN_DETAILS.X774662_CURRENT_MATURITY_DATE | format to yyyy-mm-dd |
+| repaymentFrequency | - Interest Only End Date- Payment Frequency- X774662-LBL-INT-CHG-FREQ ??? | CAP Loan Inq | - X774662_MORE_LOAN_DETAILS.X774662_INT_ONLY_END_DATE- X774662_MORE_LOAN_DETAILS.X774662_PAYMENT_FREQUENCY- X774662-LBL-INT-CHG-FREQ ??? |  |
 
 > Example responses
 
